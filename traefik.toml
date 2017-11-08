@@ -1,0 +1,6 @@
+debug = true
+[web]
+address = ":8080"
+[docker]
+domain = "app.dev"
+watch = true
