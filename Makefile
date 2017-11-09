@@ -3,3 +3,9 @@ build:
 
 up: build
 	docker-compose -f traefik-compose.yml up
+
+pull:
+	docker pull traefik
+
+push:
+	docker push bearstech/traefik-dev
