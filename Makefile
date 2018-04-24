@@ -1,11 +1,15 @@
-build:
-	docker build -t bearstech/traefik-dev -f Dockerfile .
-
-up: build
-	docker-compose -f traefik-compose.yml up
+all: pull build
 
 pull:
 	docker pull traefik
 
+build:
+	docker build -t bearstech/traefik-dev -f Dockerfile .
+
 push:
 	docker push bearstech/traefik-dev
+
+test:
+	docker-compose -f traefik-compose.yml up
+
+tests: test
