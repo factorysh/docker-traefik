@@ -10,6 +10,6 @@ push:
 	docker push bearstech/traefik-dev
 
 test:
-	docker-compose -f traefik-compose.yml up -b
+	docker-compose -f traefik-compose.yml up -d
 
 tests: test
