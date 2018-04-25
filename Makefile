@@ -11,5 +11,6 @@ push:
 
 test:
 	docker-compose -f traefik-compose.yml up -d
+	docker-compose -f traefik-compose.yml down || true
 
 tests: test
