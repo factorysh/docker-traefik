@@ -1,0 +1,10 @@
+---
+
+http:
+    http://traefik/:
+        status: 200
+        no-follow-redirects: false
+        timeout: 1000
+        body:
+            - '"Host":"traefik"'
+            - '"hostname":"mirror"'

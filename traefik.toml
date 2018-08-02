@@ -39,7 +39,7 @@ logLevel = "INFO"
 # Optional
 # Default: ["http"]
 #
-defaultEntryPoints = ["http", "https"]
+defaultEntryPoints = ["http"]
 
 # Entrypoints definition
 #
@@ -47,9 +47,9 @@ defaultEntryPoints = ["http", "https"]
 # Default:
 [entryPoints]
   [entryPoints.http]
-  address = "localhost:80"
+  address = "0.0.0.0:80"
   [entryPoints.traefik]
-  address = "localhost:8080"
+  address = "0.0.0.0:8080"
 
 # Enable access logs
 # By default it will write to stdout and produce logs in the textual
@@ -178,4 +178,4 @@ watch = true
 # Optional
 # Default: true
 #
-exposedbydefault = false
+exposedbydefault = true
