@@ -13,6 +13,7 @@ push:
 
 test: bin/goss
 	docker-compose -f tests/docker-compose.yml up -d traefik mirror
+	sleep 1
 	docker-compose -f tests/docker-compose.yml run goss \
 		goss -g web.yaml validate --max-concurrent 4 --format documentation
 	docker-compose -f tests/docker-compose.yml down || true
@@ -23,4 +24,3 @@ bin/goss:
 	mkdir -p bin
 	curl -o bin/goss -L https://github.com/aelsabbahy/goss/releases/download/v${GOSS_VERSION}/goss-linux-amd64
 	chmod +x bin/goss
-
