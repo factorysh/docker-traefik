@@ -11,6 +11,9 @@ build:
 push:
 	docker push bearstech/traefik-dev
 
+remove_image:
+	docker rmi bearstech/traefik-dev
+
 test: bin/goss
 	docker-compose -f tests/docker-compose.yml up -d traefik mirror
 	sleep 1
