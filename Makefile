@@ -3,7 +3,7 @@ GOSS_VERSION := 0.3.5
 all: pull build
 
 pull:
-	docker pull traefik
+	docker pull traefik:1.6
 
 build:
 	docker build -t bearstech/traefik-dev -f Dockerfile .
