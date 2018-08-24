@@ -23,7 +23,7 @@ services:
         image: bearstech/debian:stretch
         volumes:
             - ../bin/goss:/usr/bin/goss
-            - ../tests:/goss
+            - ../tests_traefik:/goss
         working_dir: /goss
         links:
             - traefik

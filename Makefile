@@ -15,11 +15,11 @@ remove_image:
 	docker rmi bearstech/traefik-dev
 
 test: bin/goss
-	docker-compose -f tests/docker-compose.yml up -d traefik mirror
+	docker-compose -f tests_traefik/docker-compose.yml up -d traefik mirror
 	sleep 1
-	docker-compose -f tests/docker-compose.yml run goss \
+	docker-compose -f tests_traefik/docker-compose.yml run goss \
 		goss -g web.yaml validate --max-concurrent 4 --format documentation
-	docker-compose -f tests/docker-compose.yml down || true
+	docker-compose -f tests_traefik/docker-compose.yml down || true
 
 tests: test
 
