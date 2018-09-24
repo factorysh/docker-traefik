@@ -8,3 +8,18 @@ http:
         body:
             - '"Host":"traefik"'
             - '"hostname":"mirror"'
+
+    http://auth/#oups:
+        status: 401
+        no-follow-redirects: false
+        timeout: 1000
+
+    http://auth/#ok:
+        status: 200
+        no-follow-redirects: false
+        timeout: 1000
+        username: bob
+        password: password
+        body:
+            - '"Host":"auth"'
+            - '"hostname":"auth-mirror"'

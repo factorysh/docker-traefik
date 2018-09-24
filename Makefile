@@ -1,4 +1,4 @@
-GOSS_VERSION := 0.3.5
+GOSS_VERSION := 0.3.6
 
 all: pull build
 
@@ -14,8 +14,8 @@ push:
 remove_image:
 	docker rmi bearstech/traefik-dev
 
-test: bin/goss
-	docker-compose -f tests_traefik/docker-compose.yml up -d traefik mirror
+test: bin/${GOSS_VERSION}/goss
+	docker-compose -f tests_traefik/docker-compose.yml up -d traefik mirror auth-mirror
 	sleep 1
 	docker-compose -f tests_traefik/docker-compose.yml run goss \
 		goss -g web.yaml validate --max-concurrent 4 --format documentation
@@ -23,7 +23,8 @@ test: bin/goss
 
 tests: test
 
-bin/goss:
-	mkdir -p bin
-	curl -o bin/goss -L https://github.com/aelsabbahy/goss/releases/download/v${GOSS_VERSION}/goss-linux-amd64
-	chmod +x bin/goss
+bin/${GOSS_VERSION}/goss:
+	mkdir -p bin/${GOSS_VERSION}/
+	curl -o bin/${GOSS_VERSION}/goss -L https://github.com/aelsabbahy/goss/releases/download/v${GOSS_VERSION}/goss-linux-amd64
+	chmod +x bin/${GOSS_VERSION}/goss
+	cd bin && ln -s ${GOSS_VERSION} current

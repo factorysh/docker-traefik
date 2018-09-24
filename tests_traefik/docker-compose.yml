@@ -19,11 +19,20 @@ services:
         ports:
             - 5000
 
+    auth-mirror:
+        image: bearstech/http-mirror
+        hostname: auth-mirror
+        labels:
+            traefik.frontend.rule: Host:auth
+            traefik.frontend.auth.basic: bob:$$apr1$$8cJXrdhG$$w69pUd0TFNhYAzo2Aut0A/ # bob password
+        ports:
+            - 5000
     goss:
         image: bearstech/debian:stretch
         volumes:
-            - ../bin/goss:/usr/bin/goss
+            - ../bin/current/goss:/usr/bin/goss
             - ../tests_traefik:/goss
         working_dir: /goss
         links:
             - traefik
+            - traefik:auth
