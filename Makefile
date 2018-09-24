@@ -15,7 +15,8 @@ remove_image:
 	docker rmi bearstech/traefik-dev
 
 test: bin/${GOSS_VERSION}/goss
-	docker-compose -f tests_traefik/docker-compose.yml up -d traefik mirror auth-mirror
+	docker-compose -f tests_traefik/docker-compose.yml up -d \
+		traefik mirror auth-mirror empty-auth-mirror
 	sleep 1
 	docker-compose -f tests_traefik/docker-compose.yml run goss \
 		goss -g web.yaml validate --max-concurrent 4 --format documentation

@@ -23,3 +23,8 @@ http:
         body:
             - '"Host":"auth"'
             - '"hostname":"auth-mirror"'
+
+    http://empty-auth/:
+        status: 200
+        no-follow-redirects: false
+        timeout: 1000

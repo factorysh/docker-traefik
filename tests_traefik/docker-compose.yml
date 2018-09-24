@@ -27,6 +27,16 @@ services:
             traefik.frontend.auth.basic: bob:$$apr1$$8cJXrdhG$$w69pUd0TFNhYAzo2Aut0A/ # bob password
         ports:
             - 5000
+
+    empty-auth-mirror:
+        image: bearstech/http-mirror
+        hostname: empty-auth-mirror
+        labels:
+            traefik.frontend.rule: Host:empty-auth
+            traefik.frontend.auth.basic: ""
+        ports:
+            - 5000
+
     goss:
         image: bearstech/debian:stretch
         volumes:
@@ -36,3 +46,4 @@ services:
         links:
             - traefik
             - traefik:auth
+            - traefik:empty-auth
