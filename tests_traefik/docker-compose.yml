@@ -24,7 +24,9 @@ services:
         hostname: auth-mirror
         labels:
             traefik.frontend.rule: Host:auth
-            traefik.frontend.auth.basic: bob:$$apr1$$8cJXrdhG$$w69pUd0TFNhYAzo2Aut0A/ # bob password
+            traefik.frontend.auth.basic: >
+                bob:$$apr1$$8cJXrdhG$$w69pUd0TFNhYAzo2Aut0A/
+            # bob password
         ports:
             - 5000
 
