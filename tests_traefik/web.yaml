@@ -33,3 +33,10 @@ http:
         status: 200
         no-follow-redirects: false
         timeout: 1000
+
+    http://traefik:8080/api/providers:
+        status: 200
+        no-follow-redirects: false
+        timeout: 1000
+        body:
+            - '"backend":"backend-mirror-tests-traefik"'
