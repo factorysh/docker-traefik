@@ -2,10 +2,11 @@
 import os
 import sys
 import time
-import docker
 import socket
-import argparse
+import docker
 import logging
+import argparse
+import http.client
 
 
 def main():
@@ -46,14 +47,28 @@ def main():
             'Cant find my project! Are you using me inside compose ?!')
         return 1
 
-    ready = False
-    while time.time() < breaks_at:
-        ready = True
-        for container in client.containers.list(filters={'label': label}):
-            service = container.labels['com.docker.compose.service']
-            if container.status != 'running':
-                log.debug(service + ' is ' + container.status)
-                ready = False
+    containers = client.containers.list(filters={'label': label}, all=True)
+    containers = {
+        c.labels['com.docker.compose.service']: c
+        for c in containers
+    }
+
+    while time.time() < breaks_at and containers:
+        time.sleep(args.retry_delay)
+        for service in list(containers):
+            container = containers[service]
+            if container.id.startswith(my_id):
+                containers.pop(service)
+                continue
+            container.reload()
+            labels = container.labels
+            is_cron = any([k for k in labels
+                           if k.startswith('sh.factory.cronjob.schedule')])
+            if is_cron:
+                log.debug('Ignoring cron %s', service)
+                containers.pop(service)
+                continue
+            use_traefik = any([k for k in labels if k.startswith('traefik')])
             if service.startswith(('mysql', 'postgresql')):
                 cmd = None
                 if service.startswith('mysql'):
@@ -79,17 +94,53 @@ def main():
                         msg = rc.output.decode('utf8', errors='replace')
                         log.debug('%s still failing: %s',
                                   service, msg.strip())
-                        ready = False
                     else:
-                        log.info('%s is ready to accept connections' % service)
+                        log.info('%s is accepting connections' % service)
+                        containers.pop(service)
+                        continue
                 else:
                     log.error('Cant check %s status. %s in environment.',
                               service, msg)
-        if ready:
-            log.info('All services are ready! Starting...')
-            return 0
-        time.sleep(args.retry_delay)
-    return 1
+            elif use_traefik:
+                config = container.attrs['Config']
+                ports = config.get('ExposedPorts')
+                if len(ports) > 1:
+                    # dont mess with multiple ports...
+                    containers.pop(service)
+                    continue
+                for port in ports:
+                    port, proto = port.split('/')
+                    if proto != 'tcp':
+                        # dont mess with weird protos...
+                        containers.pop(service)
+                        continue
+                    url = 'http://%s:%s' % (service, port)
+                    try:
+                        conn = http.client.HTTPConnection(
+                            service, int(port), timeout=2)
+                        conn.request("HEAD", "/")
+                        conn.getresponse()
+                    except Exception as e:
+                        log.debug('%s => %r', url, e)
+                    else:
+                        log.info('%s is accepting connections on %s/tcp',
+                                 service, port)
+                        containers.pop(service)
+                        continue
+            elif container.status == 'running':
+                log.debug(service + ' is ' + container.status)
+                containers.pop(service)
+                continue
+
+    # sleep a bit so traefik handle all connections
+    time.sleep(1)
+    if containers:
+        log.info('Some services are still failing... (%s)',
+                 ', '.join(containers))
+        return 1
+    else:
+        log.info('All services are ready! Lets go!')
+        return 0
 
 
 if __name__ == '__main__':
