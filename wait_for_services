@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+import os
+import sys
+import time
+import docker
+import socket
+import argparse
+import logging
+
+
+def main():
+    env = os.environ
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--timeout', type=int, default=20)
+    parser.add_argument('-d', '--retry-delay', type=int, default=2)
+    parser.add_argument('-v', '--verbose', action='store_true', default=False)
+
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        stream=sys.stdout,
+        format='%(levelname)s: %(message)s',
+        level=100000,
+    )
+    log = logging.getLogger('wait_for_services')
+    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+
+    breaks_at = time.time() + int(args.timeout)
+
+    my_id = socket.gethostname()
+
+    client = docker.from_env()
+
+    label = None
+    for container in client.containers.list(all=True):
+        if container.id.startswith(my_id):
+            if 'com.docker.compose.project' in container.labels:
+                label = (
+                    'com.docker.compose.project=%s'
+                ) % container.labels['com.docker.compose.project']
+                break
+
+    if label is None:
+        log.critical(
+            'Cant find my project! Are you using me inside compose ?!')
+        return 1
+
+    ready = False
+    while time.time() < breaks_at:
+        ready = True
+        for container in client.containers.list(filters={'label': label}):
+            service = container.labels['com.docker.compose.service']
+            if container.status != 'running':
+                log.debug(service + ' is ' + container.status)
+                ready = False
+            if service.startswith(('mysql', 'postgresql')):
+                cmd = None
+                if service.startswith('mysql'):
+                    password = env.get('MYSQL_ROOT_PASSWORD')
+                    if password:
+                        cmd = (
+                            'mysql -u root --password=%s -e "SELECT 1+1;"'
+                        ) % password
+                    else:
+                        msg = 'No MYSQL_ROOT_PASSWORD'
+                elif service.startswith('postgresql'):
+                    s = service.replace('postgresql', 'postgres')
+                    user_key = '%s_USER' % s.upper()
+                    u = env.get(user_key)
+                    if u:
+                        u = {'u': u}
+                        cmd = r"psql -U %(u)s -w -c 'SELECT 1+1;' %(u)s" % u
+                    else:
+                        msg = 'No %s available' % user_key
+                if cmd:
+                    rc = container.exec_run(cmd)
+                    if rc.exit_code != 0:
+                        msg = rc.output.decode('utf8', errors='replace')
+                        log.debug('%s still failing: %s',
+                                  service, msg.strip())
+                        ready = False
+                    else:
+                        log.info('%s is ready to accept connections' % service)
+                else:
+                    log.error('Cant check %s status. %s in environment.',
+                              service, msg)
+        if ready:
+            log.info('All services are ready! Starting...')
+            return 0
+        time.sleep(args.retry_delay)
+    return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

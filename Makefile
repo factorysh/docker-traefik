@@ -16,8 +16,8 @@ remove_image:
 
 test: bin/${GOSS_VERSION}/goss
 	docker-compose -f tests_traefik/docker-compose.yml up -d \
-		traefik mirror auth-mirror empty-auth-mirror
-	sleep 1
+		traefik mirror auth-mirror empty-auth-mirror mysql
+	docker-compose -f tests_traefik/docker-compose.yml exec traefik wait_for_services -vd 1
 	docker-compose -f tests_traefik/docker-compose.yml run goss \
 		goss -g web.yaml validate --max-concurrent 4 --format documentation
 	docker-compose -f tests_traefik/docker-compose.yml down || true

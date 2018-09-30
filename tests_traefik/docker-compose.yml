@@ -7,6 +7,8 @@ services:
         image: bearstech/traefik-dev
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            MYSQL_ROOT_PASSWORD: password
         ports:
             - 8080
             - 80
@@ -38,6 +40,14 @@ services:
             traefik.frontend.auth.basic: ""
         ports:
             - 5000
+
+    mysql:
+        image: mariadb:10
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: db
+            MYSQL_USER: user
+            MYSQL_PASSWORD: password
 
     goss:
         image: bearstech/debian:stretch
