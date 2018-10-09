@@ -61,6 +61,16 @@ def main():
                 containers.pop(service)
                 continue
             container.reload()
+
+            # check the restart policy first
+            config = container.attrs.get("HostConfig", {}) or {}
+            policy = config.get("RestartPolicy", {}) or {}
+            if policy.get("Name") == "no":
+                # ignore if the container is allowed to crash
+                log.debug('Ignoring %s. restart: no', service)
+                containers.pop(service)
+                continue
+
             labels = container.labels
             is_cron = any([k for k in labels
                            if k.startswith('sh.factory.cronjob.schedule')])
