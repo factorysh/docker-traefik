@@ -18,5 +18,6 @@ COPY --from=traefik /traefik /usr/local/bin/traefik
 COPY ./traefik.toml /etc/traefik/traefik.toml
 
 COPY wait_for_services /usr/local/bin/wait_for_services
+COPY traefik_hosts /usr/local/bin/traefik_hosts
 
 ENTRYPOINT ["/usr/local/bin/traefik"]

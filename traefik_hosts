@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+import os
+import sys
+import docker
+import socket
+import logging
+import argparse
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--output', default='/etc/traefik_hosts')
+    parser.add_argument('-v', '--verbose', action='store_true', default=False)
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        stream=sys.stderr,
+        format='%(levelname)s: %(message)s',
+        level=100000,
+    )
+    log = logging.getLogger('wait_for_services')
+    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+
+    my_id = socket.gethostname()
+
+    client = docker.from_env()
+
+    label = None
+    for container in client.containers.list(all=True):
+        if container.id.startswith(my_id):
+            if 'com.docker.compose.project' in container.labels:
+                label = (
+                    'com.docker.compose.project=%s'
+                ) % container.labels['com.docker.compose.project']
+                break
+
+    if label is None:
+        log.critical(
+            'Cant find my project! Are you using me inside compose ?!')
+        return 1
+
+    containers = client.containers.list(filters={'label': label}, all=True)
+    containers = {
+        c.labels['com.docker.compose.service']: c
+        for c in containers
+    }
+
+    domains = set()
+
+    for service in list(containers):
+        container = containers[service]
+        if container.id.startswith(my_id):
+            containers.pop(service)
+            continue
+        for label, value in container.labels.items():
+            if label.startswith('traefik') and 'Host' in value:
+                value = value.split('Host:', 1)[1]
+                value = value.split(';', 1)[0]
+                domains.add(value)
+
+    with open('/etc/hosts') as fd:
+        line = fd.readlines()[-1]
+
+    host = line.split()[0]
+
+    if os.path.isfile(args.output):
+        mode = 'a+'
+    else:
+        mode = 'w'
+
+    new_line = '{0} {1}'.format(host,  ' '.join(sorted(list(domains))))
+    with open(args.output, mode) as fd:
+        fd.seek(0)
+        fd.truncate()
+        fd.write('127.0.0.1 localhost\n{0}\n'.format(new_line))
+    with open(args.output) as fd:
+        print(fd.read())
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
