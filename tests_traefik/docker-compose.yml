@@ -55,6 +55,7 @@ services:
             - ../bin/current/goss:/usr/bin/goss
             - ../tests_traefik:/goss
         working_dir: /goss
+        restart: 'no'
         links:
             - traefik
             - traefik:auth
