@@ -17,7 +17,7 @@ remove_image:
 test: bin/${GOSS_VERSION}/goss
 	docker-compose -f tests_traefik/docker-compose.yml up -d \
 		traefik mirror auth-mirror empty-auth-mirror mysql
-	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik wait_for_services -vd 1
+	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik wait_for_services -vd 2 --timeout 20
 	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik traefik_hosts \
 		| grep " auth empty-auth traefik"
 	docker-compose -f tests_traefik/docker-compose.yml run goss \
