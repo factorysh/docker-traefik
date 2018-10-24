@@ -24,6 +24,9 @@ test: bin/${GOSS_VERSION}/goss
 		goss -g web.yaml validate --max-concurrent 4 --format documentation
 	docker-compose -f tests_traefik/docker-compose.yml down || true
 
+down:
+	docker-compose -f tests_traefik/docker-compose.yml down || true
+
 tests: test
 
 bin/${GOSS_VERSION}/goss:
