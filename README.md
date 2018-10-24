@@ -48,4 +48,5 @@ Then use this command to wait for services:
 $ docker-compose exec -T traefik wait_for_services --timeout 20
 ```
 
-You should be able to see your application at `http://app.local`
+You should be able to see your application at `http://app.local` and traefik
+web UI at `http://traefik.local`
