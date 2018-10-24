@@ -1,7 +1,19 @@
-traefik for devs pre-configured for docker
-============================================
+Traefik docker image for development by bearstech
+==================================================
 
-Usage:
+[Traefik](https://traefik.io/) image for devs pre-configured for docker:
+
+- [bearstech/traefik-dev](https://hub.docker.com/r/bearstech/traefik-dev/)
+
+
+Dockerfiles
+-----------
+
+Dockerfiles are available at https://github.com/factorysh/docker-traefik
+
+
+Usage
+------
 
 Add this to your compose file:
 
