@@ -130,11 +130,16 @@ def main():
                     log.error('Cant check %s status. %s in environment.',
                               service, msg)
             elif use_traefik:
+                config = container.attrs['Config']
+                ports = config.get('ExposedPorts') or []
+
                 traefik_rules = []
                 for label, value in traefik_labels.items():
                     # check for traefik rule
                     if label.endswith('.rule') and 'Host:' in value:
                         traefik_rules.append(value)
+                    if label == 'traefik.port':
+                        ports = ['%s/tcp' % value]
 
                 if traefik_rules:
                     # check if traefik_rules are available in traefik providers
@@ -153,12 +158,8 @@ def main():
                         log.debug('No ' + msg, service, ', '.join(rules))
                         continue
                     else:
-                        log.info(msg, service, ', '.join(all_rules))
-                        containers.pop(service)
-                        continue
+                        log.debug(msg, service, ', '.join(all_rules))
 
-                config = container.attrs['Config']
-                ports = config.get('ExposedPorts') or []
                 if len(ports) > 1:
                     # handle http ports
                     if '80/tcp' in ports:
