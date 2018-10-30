@@ -130,31 +130,28 @@ def main():
                     log.error('Cant check %s status. %s in environment.',
                               service, msg)
             elif use_traefik:
+                try:
+                    ip = socket.gethostbyname(service)
+                except Exception:
+                    log.debug('%s does not resolve' % service)
+                    continue
+
+                # check if traefik_rules are available in traefik providers
+                resp = requests.get(
+                    "http://127.0.0.1:8080/api/providers",
+                    timeout=2)
+                if ip not in resp.text:
+                    log.debug('No traefik provider found for %s (%s)',
+                              service, ip)
+                    continue
+
                 config = container.attrs['Config']
                 ports = config.get('ExposedPorts') or []
 
-                traefik_rules = []
                 for label, value in traefik_labels.items():
-                    # check for traefik rule
-                    if label.endswith('.rule') and 'Host:' in value:
-                        traefik_rules.append(value)
+                    # check for traefik.port
                     if label == 'traefik.port':
                         ports = ['%s/tcp' % value]
-
-                if traefik_rules:
-                    # check if traefik_rules are available in traefik providers
-                    resp = requests.get(
-                        "http://127.0.0.1:8080/api/providers",
-                        timeout=2)
-                    all_rules = [rule for rule in traefik_rules]
-                    rules = [rule for rule in all_rules
-                             if rule not in resp.text]
-                    msg = 'traefik provider found for %s (%s)'
-                    if rules:
-                        log.debug('No ' + msg, service, ', '.join(rules))
-                        continue
-                    else:
-                        log.debug(msg, service, ', '.join(all_rules))
 
                 if len(ports) > 1:
                     # handle http ports
