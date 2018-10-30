@@ -5,8 +5,8 @@ import time
 import socket
 import logging
 import argparse
-import http.client
 
+import requests
 import docker
 import docker.errors
 
@@ -143,16 +143,12 @@ def main():
 
                 if traefik_rules:
                     # check if traefik_rules are available in traefik providers
-                    conn = http.client.HTTPConnection(
-                        '127.0.0.1', 8080, timeout=2)
-                    conn.request("GET", "/api/providers")
-                    resp = conn.getresponse()
-                    data = resp.read()
-
+                    resp = requests.get(
+                        "http://127.0.0.1:8080/api/providers",
+                        timeout=2)
                     all_rules = [rule for rule in traefik_rules]
-                    rules = [rule.encode('utf8') for rule in traefik_rules]
-                    rules = [rule for rule in rules if rule not in data]
-                    rules = [rule.decode('utf8') for rule in rules]
+                    rules = [rule for rule in all_rules
+                             if rule not in resp.text]
                     msg = 'traefik provider found for %s (%s)'
                     if rules:
                         log.debug('No ' + msg, service, ', '.join(rules))
@@ -181,23 +177,21 @@ def main():
 
                 url = 'http://%s:%s' % (service, port)
                 try:
-                    conn = http.client.HTTPConnection(
-                        service, int(port), timeout=2)
-                    conn.request("HEAD", "/")
-                    resp = conn.getresponse()
+                    resp = requests.head(url, timeout=args.retry_delay)
                     log.debug(
                         '%s: %s/tcp (%s %s)',
-                        service, port, resp.status, resp.reason)
+                        service, port, resp.status_code, resp.reason)
                 except Exception as e:
                     log.debug('%s %s => %r',
                               service, url, e)
                     continue
                 else:
-                    log.info(
-                        '%s is accepting connections on %s/tcp (%s %s)',
-                        service, port, resp.status, resp.reason)
-                    containers.pop(service)
-                    continue
+                    if str(resp.status_code)[0] in '1234':
+                        log.info(
+                            '%s is accepting connections on %s/tcp (%s %s)',
+                            service, port, resp.status_code, resp.reason)
+                        containers.pop(service)
+                        continue
             elif container.status == 'running':
                 log.debug(service + ' is ' + container.status)
                 containers.pop(service)
