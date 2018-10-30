@@ -3,13 +3,18 @@ import os
 import sys
 import time
 import socket
-import docker
 import logging
 import argparse
 import http.client
 
+import docker
+import docker.errors
+
 
 def main():
+
+    start = int(time.time())
+
     env = os.environ
 
     parser = argparse.ArgumentParser()
@@ -47,12 +52,18 @@ def main():
             'Cant find my project! Are you using me inside compose ?!')
         return 1
 
-    containers = client.containers.list(filters={'label': label}, all=True)
+    for i in range(2):
+        try:
+            containers = client.containers.list(
+                filters={'label': label}, all=True)
+        except docker.errors.NotFound:
+            time.sleep(args.retry_delay)
     containers = {
         c.labels['com.docker.compose.service']: c
         for c in containers
     }
 
+    not_found = set()
     while time.time() < breaks_at and containers:
         time.sleep(args.retry_delay)
         for service in list(containers):
@@ -60,7 +71,16 @@ def main():
             if container.id.startswith(my_id):
                 containers.pop(service)
                 continue
-            container.reload()
+            try:
+                container.reload()
+            except docker.errors.NotFound:
+                if service in not_found:
+                    log.error('Container %s not found', service)
+                    containers.pop(service)
+                else:
+                    # give a chance to start
+                    not_found.add(service)
+                continue
 
             # check the restart policy first
             config = container.attrs.get("HostConfig", {}) or {}
@@ -72,16 +92,14 @@ def main():
                 continue
 
             labels = container.labels
-            is_cron = any([k for k in labels
-                           if k.startswith('sh.factory.cronjob.schedule')])
-            if is_cron:
-                log.debug('Ignoring cron %s', service)
-                containers.pop(service)
-                continue
-            use_traefik = any([k for k in labels if k.startswith('traefik')])
-            if service.startswith(('mysql', 'postgresql')):
+            traefik_labels = {
+                k: v for k, v in labels.items() if k.startswith('traefik')
+            }
+            use_traefik = any(list(traefik_labels))
+            if service.startswith(('mysql', 'mariadb', 'postgresql')):
+                # handle databases
                 cmd = None
-                if service.startswith('mysql'):
+                if service.startswith(('mysql', 'mariadb')):
                     password = env.get('MYSQL_ROOT_PASSWORD')
                     if password:
                         cmd = (
@@ -112,31 +130,72 @@ def main():
                     log.error('Cant check %s status. %s in environment.',
                               service, msg)
             elif use_traefik:
+                traefik_rules = []
+                for label, value in traefik_labels.items():
+                    # check for traefik rule
+                    if label.endswith('.rule') and 'Host:' in value:
+                        traefik_rules.append(value)
+
+                if traefik_rules:
+                    # check if traefik_rules are available in traefik providers
+                    conn = http.client.HTTPConnection(
+                        '127.0.0.1', 8080, timeout=2)
+                    conn.request("GET", "/api/providers")
+                    resp = conn.getresponse()
+                    data = resp.read()
+
+                    rules = [rule.encode('utf8') for rule in traefik_rules]
+                    rules = [rule for rule in rules if rule not in data]
+                    rules = [rule.decode('utf8') for rule in rules]
+                    msg = 'traefik provider found for %s (%s)'
+                    if rules:
+                        log.debug('No ' + msg, service, ', '.join(rules))
+                        continue
+                    else:
+                        log.info(msg, service, ', '.join(rules))
+                        containers.pop(service)
+                        continue
+
                 config = container.attrs['Config']
-                ports = config.get('ExposedPorts')
+                ports = config.get('ExposedPorts') or []
                 if len(ports) > 1:
-                    # dont mess with multiple ports...
+                    # handle http ports
+                    if '80/tcp' in ports:
+                        ports = ['80/tcp']
+                    elif '8080/tcp' in ports:
+                        ports = ['8080/tcp']
+                    else:
+                        # dont mess with multiple ports/non http
+                        # services...
+                        containers.pop(service)
+                        continue
+
+                port = list(ports)[0]
+                port, proto = port.split('/')
+                if proto != 'tcp':
+                    # dont mess with weird protos...
                     containers.pop(service)
                     continue
-                for port in ports:
-                    port, proto = port.split('/')
-                    if proto != 'tcp':
-                        # dont mess with weird protos...
-                        containers.pop(service)
-                        continue
-                    url = 'http://%s:%s' % (service, port)
-                    try:
-                        conn = http.client.HTTPConnection(
-                            service, int(port), timeout=2)
-                        conn.request("HEAD", "/")
-                        conn.getresponse()
-                    except Exception as e:
-                        log.debug('%s => %r', url, e)
-                    else:
-                        log.info('%s is accepting connections on %s/tcp',
-                                 service, port)
-                        containers.pop(service)
-                        continue
+
+                url = 'http://%s:%s' % (service, port)
+                try:
+                    conn = http.client.HTTPConnection(
+                        service, int(port), timeout=2)
+                    conn.request("HEAD", "/")
+                    resp = conn.getresponse()
+                    log.debug(
+                        '%s: %s/tcp (%s %s)',
+                        service, port, resp.status, resp.reason)
+                except Exception as e:
+                    log.debug('%s %s => %r',
+                              service, url, e)
+                    continue
+                else:
+                    log.info(
+                        '%s is accepting connections on %s/tcp (%s %s)',
+                        service, port, resp.status, resp.reason)
+                    containers.pop(service)
+                    continue
             elif container.status == 'running':
                 log.debug(service + ' is ' + container.status)
                 containers.pop(service)
@@ -144,12 +203,13 @@ def main():
 
     # sleep a bit so traefik handle all connections
     time.sleep(1)
+    duration = int(time.time()) - start
     if containers:
-        log.info('Some services are still failing... (%s)',
-                 ', '.join(containers))
+        log.info('Some services are still failing after %ss... (%s)',
+                 duration, ', '.join(containers))
         return 1
     else:
-        log.info('All services are ready! Lets go!')
+        log.info('All services are ready! Lets go! (%ss)', duration)
         return 0
 
 
