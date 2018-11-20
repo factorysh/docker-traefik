@@ -1,4 +1,4 @@
-FROM traefik:1.6 as traefik
+FROM traefik:1.7 as traefik
 
 FROM bearstech/debian:stretch
 
