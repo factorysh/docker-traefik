@@ -183,7 +183,7 @@ def main():
                               service, url, e)
                     continue
                 else:
-                    if str(resp.status_code)[0] in '1234':
+                    if str(resp.status_code)[0] in '12345':
                         log.info(
                             '%s is accepting connections on %s/tcp (%s %s)',
                             service, port, resp.status_code, resp.reason)
