@@ -1,4 +1,5 @@
 GOSS_VERSION := 0.3.6
+GIT_VERSION := $(shell git rev-parse HEAD)
 
 all: pull build
 
@@ -6,7 +7,11 @@ pull:
 	docker pull traefik:1.7
 
 build:
-	docker build -t bearstech/traefik-dev -f Dockerfile .
+	docker build \
+		-t bearstech/traefik-dev \
+		--build-arg GIT_VERSION=${GIT_VERSION} \
+		-f Dockerfile \
+		.
 
 push:
 	docker push bearstech/traefik-dev

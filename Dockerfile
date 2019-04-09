@@ -20,4 +20,7 @@ COPY ./traefik.toml /etc/traefik/traefik.toml
 COPY wait_for_services /usr/local/bin/wait_for_services
 COPY traefik_hosts /usr/local/bin/traefik_hosts
 
+ARG GIT_VERSION
+LABEL com.bearstech.source.traefik=https://github.com/factorysh/docker-traefik/commit/${GIT_VERSION}
+
 ENTRYPOINT ["/usr/local/bin/traefik"]
