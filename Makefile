@@ -1,5 +1,6 @@
 GOSS_VERSION := 0.3.6
 GIT_VERSION := $(shell git rev-parse HEAD)
+GIT_DATE := $(shell git show -s --format=%ci HEAD)
 
 all: pull build
 
@@ -10,6 +11,7 @@ build:
 	docker build \
 		-t bearstech/traefik-dev \
 		--build-arg GIT_VERSION=${GIT_VERSION} \
+		--build-arg GIT_DATE=${GIT_DATE} \
 		-f Dockerfile \
 		.
 
