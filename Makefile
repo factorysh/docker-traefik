@@ -11,7 +11,7 @@ build:
 	docker build \
 		-t bearstech/traefik-dev \
 		--build-arg GIT_VERSION=${GIT_VERSION} \
-		--build-arg GIT_DATE=${GIT_DATE} \
+		--build-arg GIT_DATE="${GIT_DATE}" \
 		-f Dockerfile \
 		.
 
