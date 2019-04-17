@@ -23,4 +23,7 @@ COPY traefik_hosts /usr/local/bin/traefik_hosts
 ARG GIT_VERSION
 LABEL com.bearstech.source.traefik=https://github.com/factorysh/docker-traefik/commit/${GIT_VERSION}
 
+ARG GIT_DATE
+LABEL com.bearstech.date.traefik=${GIT_DATE}
+
 ENTRYPOINT ["/usr/local/bin/traefik"]
