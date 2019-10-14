@@ -1,6 +1,7 @@
+
+include Makefile.build_args
+
 GOSS_VERSION := 0.3.6
-GIT_VERSION := $(shell git rev-parse HEAD)
-GIT_DATE := $(shell git show -s --format=%ci HEAD)
 
 all: pull build
 
@@ -8,10 +9,9 @@ pull:
 	docker pull traefik:1.7
 
 build:
-	docker build \
+	 docker build \
+		$(DOCKER_BUILD_ARGS) \
 		-t bearstech/traefik-dev \
-		--build-arg GIT_VERSION=${GIT_VERSION} \
-		--build-arg GIT_DATE="${GIT_DATE}" \
 		-f Dockerfile \
 		.
 
