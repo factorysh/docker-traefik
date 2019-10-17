@@ -1,0 +1,8 @@
+
+lint:
+	docker run \
+		--rm -u $(shell id -u) \
+		-v $(HOME)/.cache:/.cache \
+		-v $(shell pwd):/docker-traefik \
+		-w /docker-traefik \
+		bearstech/lint
