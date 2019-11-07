@@ -54,8 +54,15 @@ def main():
             continue
         for label, value in container.labels.items():
             if label.startswith('traefik') and 'Host' in value:
-                value = value.split('Host:', 1)[1]
-                value = value.split(';', 1)[0]
+                if 'Host:' in value:
+                    # v1
+                    value = value.split('Host:', 1)[1]
+                    value = value.split(';', 1)[0]
+                elif 'Host(' in value:
+                    # v2
+                    value = value.split('Host(', 1)[1]
+                    value = value.split(')', 1)[0]
+                    value = value.strip('`')
                 domains.add(value)
 
     with open('/etc/hosts') as fd:
