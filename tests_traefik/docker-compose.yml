@@ -4,7 +4,7 @@ version: "3"
 
 services:
     traefik:
-        image: bearstech/traefik-dev
+        image: bearstech/traefik-dev:${TRAEFIK_VERSION}
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         environment:
@@ -42,7 +42,7 @@ services:
             - 5000
 
     mysql:
-        image: mariadb:10
+        image: mariadb:10.1
         environment:
             MYSQL_ROOT_PASSWORD: password
             MYSQL_DATABASE: db
