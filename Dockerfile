@@ -1,4 +1,5 @@
-FROM traefik:1.7 as traefik
+ARG TRAEFIK_VERSION
+FROM traefik:${TRAEFIK_VERSION} as traefik
 
 FROM bearstech/debian:stretch
 
@@ -15,7 +16,8 @@ RUN set -eux \
 
 COPY --from=traefik /traefik /usr/local/bin/traefik
 
-COPY ./traefik.toml /etc/traefik/traefik.toml
+ARG TRAEFIK_VERSION
+COPY ./traefik-${TRAEFIK_VERSION}.toml /etc/traefik/traefik.toml
 
 COPY wait_for_services /usr/local/bin/wait_for_services
 COPY traefik_hosts /usr/local/bin/traefik_hosts

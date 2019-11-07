@@ -4,20 +4,27 @@ include Makefile.build_args
 
 GOSS_VERSION := 0.3.6
 
+TRAEFIK_VERSION := 1.7
+
+export TRAEFIK_VERSION
+
 all: pull build
 
 pull:
-	docker pull traefik:1.7
+	docker pull traefik:$(TRAEFIK_VERSION)
 
 build:
 	 docker build \
 		$(DOCKER_BUILD_ARGS) \
-		-t bearstech/traefik-dev \
+		--build-arg TRAEFIK_VERSION=$(TRAEFIK_VERSION) \
+		-t bearstech/traefik-dev:$(TRAEFIK_VERSION) \
 		-f Dockerfile \
 		.
+	 docker tag bearstech/traefik-dev:$(TRAEFIK_VERSION) bearstech/traefik-dev:latest
 
 push:
-	docker push bearstech/traefik-dev
+	docker push bearstech/traefik-dev:$(TRAEFIK_VERSION)
+	docker push bearstech/traefik-dev:latest
 
 remove_image:
 	docker rmi bearstech/traefik-dev
@@ -25,7 +32,7 @@ remove_image:
 test: bin/${GOSS_VERSION}/goss
 	docker-compose -f tests_traefik/docker-compose.yml up -d \
 		traefik mirror auth-mirror empty-auth-mirror mysql
-	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik wait_for_services -vd 2 --timeout 20
+	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik wait_for_services -vd 2 --timeout 120
 	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik traefik_hosts \
 		| grep " auth empty-auth traefik"
 	docker-compose -f tests_traefik/docker-compose.yml run goss \
