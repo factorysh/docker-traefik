@@ -11,6 +11,12 @@ import docker
 import docker.errors
 
 
+SERVICES_URL = {
+    "v1": "http://127.0.0.1:8080/api/providers",
+    "v2": "http://127.0.0.1:8080/api/http/services",
+}
+
+
 def main():
 
     start = int(time.time())
@@ -137,9 +143,10 @@ def main():
                     continue
 
                 # check if traefik_rules are available in traefik providers
-                resp = requests.get(
-                    "http://127.0.0.1:8080/api/providers",
-                    timeout=2)
+                for service_url in SERVICES_URL.values():
+                    resp = requests.get(service_url, timeout=2)
+                    if resp.status_code == 200:
+                        break
                 if ip not in resp.text:
                     log.debug('No traefik provider found for %s (%s)',
                               service, ip)

@@ -18,6 +18,7 @@ services:
         hostname: mirror
         labels:
             traefik.frontend.rule: Host:traefik
+            traefik.http.routers.traefik.rule: Host(`traefik`)
         ports:
             - 5000
 
@@ -25,10 +26,14 @@ services:
         image: bearstech/http-mirror
         hostname: auth-mirror
         labels:
+            # auth is bob / password
             traefik.frontend.rule: Host:auth
             traefik.frontend.auth.basic: >
                 bob:$$apr1$$8cJXrdhG$$w69pUd0TFNhYAzo2Aut0A/
-            # bob password
+            traefik.http.routers.router0.rule: Host(`auth`)
+            traefik.http.routers.router0.middlewares: auth
+            traefik.http.middlewares.auth.basicauth.users: >
+                bob:$$apr1$$8cJXrdhG$$w69pUd0TFNhYAzo2Aut0A/
         ports:
             - 5000
 
@@ -38,6 +43,7 @@ services:
         labels:
             traefik.frontend.rule: Host:empty-auth
             traefik.frontend.auth.basic: ""
+            traefik.http.routers.router1.rule: Host(`empty-auth`)
         ports:
             - 5000
 
