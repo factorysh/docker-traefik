@@ -13,7 +13,7 @@ import docker.errors
 
 SERVICES_URL = {
     "v1": "http://127.0.0.1:8080/api/providers",
-    "v2": "http://172.27.0.2:8080/api/http/services",
+    "v2": "http://127.0.0.1:8080/api/http/services",
 }
 
 
