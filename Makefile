@@ -31,11 +31,15 @@ remove_image:
 	docker rmi bearstech/traefik-dev
 
 test: bin/${GOSS_VERSION}/goss
-	docker-compose -f tests_traefik/docker-compose.yml up -d \
-		traefik mirror auth-mirror empty-auth-mirror mysql
-	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik wait_for_services -vd 2 --timeout 120
+	rm -f hosts
+	touch hosts
+	docker-compose -f tests_traefik/docker-compose.yml up -d
+	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik \
+		wait_for_services -vd 2 --timeout 120
+	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik \
+		traefik_hosts > hosts
 	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik traefik_hosts \
-		| grep " auth empty-auth traefik"
+		| grep " auth empty-auth mirror"
 	docker-compose -f tests_traefik/docker-compose.yml run goss \
 		goss -g web-$(TRAEFIK_VERSION).yaml validate --max-concurrent 4 --format documentation
 	docker-compose -f tests_traefik/docker-compose.yml down || true

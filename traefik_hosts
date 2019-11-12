@@ -62,8 +62,9 @@ def main():
                     # v2
                     value = value.split('Host(', 1)[1]
                     value = value.split(')', 1)[0]
-                    value = value.strip('`')
-                domains.add(value)
+                    value = value.replace('`', '')
+                for name in value.split(','):
+                    domains.add(name)
 
     with open('/etc/hosts') as fd:
         line = fd.readlines()[-1]
