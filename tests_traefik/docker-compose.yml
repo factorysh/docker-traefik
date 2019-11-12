@@ -9,17 +9,17 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
         environment:
             MYSQL_ROOT_PASSWORD: password
-        ports:
+        expose:
             - 8080
             - 80
 
-    mirror:
+    mirror-mirror:
         image: bearstech/http-mirror
         hostname: mirror
         labels:
-            traefik.frontend.rule: Host:traefik
-            traefik.http.routers.traefik.rule: Host(`traefik`)
-        ports:
+            traefik.frontend.rule: Host:mirror
+            traefik.http.routers.mirrorTraefik.rule: Host(`mirror`)
+        expose:
             - 5000
 
     auth-mirror:
@@ -30,11 +30,11 @@ services:
             traefik.frontend.rule: Host:auth
             traefik.frontend.auth.basic: >
                 bob:$$apr1$$8cJXrdhG$$w69pUd0TFNhYAzo2Aut0A/
-            traefik.http.routers.router0.rule: Host(`auth`)
-            traefik.http.routers.router0.middlewares: auth
+            traefik.http.routers.authMirrorTraefik.rule: Host(`auth`)
+            traefik.http.routers.authMirrorTraefik.middlewares: auth
             traefik.http.middlewares.auth.basicauth.users: >
                 bob:$$apr1$$8cJXrdhG$$w69pUd0TFNhYAzo2Aut0A/
-        ports:
+        expose:
             - 5000
 
     empty-auth-mirror:
@@ -43,8 +43,8 @@ services:
         labels:
             traefik.frontend.rule: Host:empty-auth
             traefik.frontend.auth.basic: ""
-            traefik.http.routers.router1.rule: Host(`empty-auth`)
-        ports:
+            traefik.http.routers.emptyAuthTraefik.rule: Host(`empty-auth`)
+        expose:
             - 5000
 
     mysql:
@@ -60,9 +60,11 @@ services:
         volumes:
             - ../bin/current/goss:/usr/bin/goss
             - ../tests_traefik:/goss
+            - ../hosts:/etc/hosts
         working_dir: /goss
         restart: 'no'
-        links:
+        depends_on:
             - traefik
-            - traefik:auth
-            - traefik:empty-auth
+            - mirror-mirror
+            - auth-mirror
+            - empty-auth-mirror

@@ -1,12 +1,12 @@
 ---
 
 http:
-    http://traefik/:
+    http://mirror/:
         status: 200
         no-follow-redirects: false
         timeout: 1000
         body:
-            - '"Host":"traefik"'
+            - '"Host":"mirror"'
             - '"hostname":"mirror"'
 
     http://auth/#oups:
@@ -39,4 +39,4 @@ http:
         no-follow-redirects: false
         timeout: 1000
         body:
-            - '"backend":"backend-mirror-tests-traefik"'
+            - '"backend":"backend-mirror-mirror-tests-traefik"'
