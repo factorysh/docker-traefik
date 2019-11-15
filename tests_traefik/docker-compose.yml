@@ -17,6 +17,7 @@ services:
         image: bearstech/http-mirror
         hostname: mirror
         labels:
+            traefik.enable: 'true'
             traefik.frontend.rule: Host:mirror
             traefik.http.routers.mirrorTraefik.rule: Host(`mirror`)
         expose:
@@ -26,6 +27,7 @@ services:
         image: bearstech/http-mirror
         hostname: auth-mirror
         labels:
+            traefik.enable: 'true'
             # auth is bob / password
             traefik.frontend.rule: Host:auth
             traefik.frontend.auth.basic: >
@@ -41,6 +43,7 @@ services:
         image: bearstech/http-mirror
         hostname: empty-auth-mirror
         labels:
+            traefik.enable: 'true'
             traefik.frontend.rule: Host:empty-auth
             traefik.frontend.auth.basic: ""
             traefik.http.routers.emptyAuthTraefik.rule: Host(`empty-auth`)
