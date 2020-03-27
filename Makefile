@@ -24,7 +24,7 @@ build:
 		$(DOCKER_BUILD_ARGS) \
 		--build-arg TRAEFIK_VERSION=$(TRAEFIK_VERSION) \
 		--build-arg TRAEFIK_MAJOR_VERSION=$(TRAEFIK_MAJOR_VERSION) \
-		-t bearstech/traefik-dev:$(TRAEFIK_VERSION) \
+		-t bearstech/traefik-dev:$(TRAEFIK_MAJOR_VERSION) \
 		-f Dockerfile-$(TRAEFIK_MAJOR_VERSION) \
 		.
 	 docker tag bearstech/traefik-dev:$(TRAEFIK_MAJOR_VERSION) bearstech/traefik-dev:latest
