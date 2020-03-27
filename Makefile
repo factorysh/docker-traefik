@@ -4,7 +4,8 @@ include Makefile.build_args
 
 GOSS_VERSION := 0.3.6
 
-TRAEFIK_VERSION := 1.7
+TRAEFIK_VERSION := 1.7.11
+TRAEFIK_MAJOR_VERSION = $(shell echo $(TRAEFIK_VERSION) | grep -o -e "\d\.\d*")
 
 export TRAEFIK_VERSION
 
@@ -17,13 +18,14 @@ build:
 	 docker build \
 		$(DOCKER_BUILD_ARGS) \
 		--build-arg TRAEFIK_VERSION=$(TRAEFIK_VERSION) \
+		--build-arg TRAEFIK_MAJOR_VERSION=$(TRAEFIK_MAJOR_VERSION) \
 		-t bearstech/traefik-dev:$(TRAEFIK_VERSION) \
-		-f Dockerfile-$(TRAEFIK_VERSION) \
+		-f Dockerfile-$(TRAEFIK_MAJOR_VERSION) \
 		.
-	 docker tag bearstech/traefik-dev:$(TRAEFIK_VERSION) bearstech/traefik-dev:latest
+	 docker tag bearstech/traefik-dev:$(TRAEFIK_MAJOR_VERSION) bearstech/traefik-dev:latest
 
 push:
-	docker push bearstech/traefik-dev:$(TRAEFIK_VERSION)
+	docker push bearstech/traefik-dev:$(TRAEFIK_MAJOR_VERSION)
 # we dont want to push 2.0 as latest for now
 #	docker push bearstech/traefik-dev:latest
 
@@ -41,7 +43,7 @@ test: bin/${GOSS_VERSION}/goss
 	docker-compose -f tests_traefik/docker-compose.yml exec -T traefik traefik_hosts \
 		| grep " auth empty-auth mirror"
 	docker-compose -f tests_traefik/docker-compose.yml run goss \
-		goss -g web-$(TRAEFIK_VERSION).yaml validate --max-concurrent 4 --format documentation
+		goss -g web-$(TRAEFIK_MAJOR_VERSION).yaml validate --max-concurrent 4 --format documentation
 	docker-compose -f tests_traefik/docker-compose.yml down || true
 
 down:

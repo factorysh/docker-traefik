@@ -19,12 +19,11 @@ RUN set -eux \
 COPY --from=traefik /traefik /usr/local/bin/traefik
 
 ARG TRAEFIK_VERSION
-COPY ./traefik-${TRAEFIK_VERSION}.toml /etc/traefik/traefik.toml
+ARG TRAEFIK_MAJOR_VERSION
+COPY ./traefik-${TRAEFIK_MAJOR_VERSION}.toml /etc/traefik/traefik.toml
 
 COPY wait_for_services /usr/local/bin/wait_for_services
 COPY traefik_hosts /usr/local/bin/traefik_hosts
-
-
 
 ENTRYPOINT ["/usr/local/bin/traefik"]
 
@@ -35,9 +34,10 @@ ARG GIT_DATE
 ARG BUILD_DATE
 
 LABEL \
+    io.containous.factory.version=${TRAEFIK_VERSION} \
     com.bearstech.image.revision_date=${GIT_DATE} \
     org.opencontainers.image.authors=Bearstech \
     org.opencontainers.image.revision=${GIT_VERSION} \
     org.opencontainers.image.created=${BUILD_DATE} \
     org.opencontainers.image.url=https://github.com/factorysh/docker-traefik \
-    org.opencontainers.image.source=https://github.com/factorysh/docker-traefik/blob/${GIT_VERSION}/Dockerfile-1.7
+    org.opencontainers.image.source=https://github.com/factorysh/docker-traefik/blob/${GIT_VERSION}/Dockerfile-${TRAEFIK_MAJOR_VERSION}
