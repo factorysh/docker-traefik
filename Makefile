@@ -5,11 +5,16 @@ include Makefile.build_args
 GOSS_VERSION := 0.3.6
 
 TRAEFIK_VERSION := 1.7.11
-TRAEFIK_MAJOR_VERSION = $(shell echo $(TRAEFIK_VERSION) | grep -o -e "\d\.\d*")
+major = $(shell echo $(TRAEFIK_VERSION) | cut -d. -f1)
+minor = $(shell echo $(TRAEFIK_VERSION) | cut -d. -f2)
+TRAEFIK_MAJOR_VERSION = "$(major).$(minor)"
 
 export TRAEFIK_VERSION
 
 all: pull build
+
+version:
+	echo $(TRAEFIK_MAJOR_VERSION)
 
 pull:
 	docker pull traefik:$(TRAEFIK_VERSION)
