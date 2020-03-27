@@ -4,7 +4,7 @@ include Makefile.build_args
 
 GOSS_VERSION := 0.3.6
 
-TRAEFIK_VERSION := 2.0
+TRAEFIK_VERSION := 1.7
 
 export TRAEFIK_VERSION
 

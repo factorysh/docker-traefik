@@ -4,6 +4,7 @@ FROM traefik:${TRAEFIK_VERSION} as traefik
 FROM bearstech/debian:buster
 
 ENV LANG=C.UTF-8
+ENV HTTP_PROXY=""
 
 RUN set -eux \
     &&  export http_proxy=${HTTP_PROXY} \
