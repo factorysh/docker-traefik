@@ -7,7 +7,7 @@ GOSS_VERSION := 0.3.6
 TRAEFIK_VERSION := 1.7.11
 major = $(shell echo $(TRAEFIK_VERSION) | cut -d. -f1)
 minor = $(shell echo $(TRAEFIK_VERSION) | cut -d. -f2)
-TRAEFIK_MAJOR_VERSION = "$(major).$(minor)"
+TRAEFIK_MAJOR_VERSION = $(major).$(minor)
 
 export TRAEFIK_VERSION TRAEFIK_MAJOR_VERSION
 
