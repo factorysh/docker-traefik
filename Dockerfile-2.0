@@ -10,7 +10,7 @@ RUN set -eux \
     &&  apt-get update \
     &&  apt-get install -y --no-install-recommends \
                 python3 python3-pip \
-    &&  python3 -m pip install "docker<=3.9" \
+    &&  python3 -m pip install --no-cache-dir "docker<=3.9" \
     &&  apt-get clean \
     &&  rm -rf /var/lib/apt/lists/* /root/.cache \
     &&  update-alternatives --install /usr/bin/python python /usr/bin/python3 1
