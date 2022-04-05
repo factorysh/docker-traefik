@@ -9,7 +9,7 @@ major = $(shell echo $(TRAEFIK_VERSION) | cut -d. -f1)
 minor = $(shell echo $(TRAEFIK_VERSION) | cut -d. -f2)
 TRAEFIK_MAJOR_VERSION = "$(major).$(minor)"
 
-export TRAEFIK_VERSION
+export TRAEFIK_VERSION TRAEFIK_MAJOR_VERSION
 
 all: pull build
 
